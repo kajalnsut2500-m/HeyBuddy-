@@ -1,63 +1,76 @@
-# Chatter
+# HeyBuddy!
 
-Application for realtime chatting with registered users built with NodeJS, Express, Sequelize, WebSocket (Socket.io), React
+A real-time chat application built with Node.js, Express, React, Socket.IO, and WebRTC.
 
-## Features:
-* Local Authentication using Email and Password
-* Account Management (profile details, change avatar/personal data)
-* Realtime chatting with users using Socket.IO
-* Sequelize & PostgreSQL database
-* Storing images in Cloudinary
-* Storing user sessions in Redis
-* Using Redux (toolkit) for user interaction
+## Features
 
-## Screenshots:
-#### Log In / Sign Up:
-<img src="https://res.cloudinary.com/dluwizg51/image/upload/v1659337659/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA_%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0_2022-08-01_130709_yfoapn.png" width="49.5%" /> <img src="https://res.cloudinary.com/dluwizg51/image/upload/v1659337714/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA_%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0_2022-08-01_130825_cyxooo.png" width="49.5%" />
+- Local authentication using email and password
+- Account management — update profile details and avatar
+- Real-time messaging with Socket.IO
+- WebRTC-powered document sharing between users
+- PostgreSQL database with Sequelize ORM
+- Image storage via Cloudinary
+- Session management with Redis
+- Redux Toolkit for state management
 
-#### Settings:
-![image](https://user-images.githubusercontent.com/92920845/182094101-dd7aa8e2-fa1d-4d63-af12-f9e7c179bc4e.png)
-#### New Conversation:
-![image](https://user-images.githubusercontent.com/92920845/182094664-2c30257c-bff0-4f11-a575-2f85fb7587c0.png)
-#### Chat:
-![image](https://user-images.githubusercontent.com/92920845/182095041-f803ad66-cd12-4822-bf8b-b5b02a3acbfd.png)
+## Tech Stack
 
+| Layer    | Technology                          |
+|----------|-------------------------------------|
+| Frontend | React, Redux Toolkit, Socket.IO     |
+| Backend  | Node.js, Express, Sequelize         |
+| Database | PostgreSQL, Redis                   |
+| Realtime | Socket.IO, WebRTC                   |
+| Storage  | Cloudinary                          |
+| DevOps   | Docker, Docker Compose              |
 
 ## Getting Started
+
 ### Prerequisites
-* NodeJS, NPM (https://www.npmjs.com/get-npm)
-* ReactJS (https://reactjs.org)
-* Redis (https://redis.io)
-* PostgreSQL (https://www.postgresql.org)
-* Cloudinary (https://cloudinary.com)
 
-### Installing
+- Node.js & NPM
+- PostgreSQL
+- Redis
+- Cloudinary account
+
+### Installation
+
 ```bash
-# Get the latest snapshot
-git clone https://github.com/Bioneisme/nodejs-socket-react-chatapp.git
-```
-``` bash
-# Change directory
-cd nodejs-socket-react-chatapp
-```
-``` bash
-# Install dependencies in client side
-cd client && npm install
-# Install dependencies in socket side
-cd socket && npm install
-# Install dependencies in server side
-cd server && npm install
-```
-In server create an .env file locally. You can duplicate .env.example and name the new copy .env. Adapt the variables to your needs.
-``` bash
-# After setting up .env start app
-npm run start # in all project sides (client/server/socket)
-# or npm run dev
+# Clone the repository
+git clone https://github.com/kajalnsut2500-m/HeyBuddy-.git
+cd HeyBuddy-
 ```
 
-### Docker
-Alternatively it is also possible to setup project through docker. To setup the container you have to checkout the repository and run the following command:
-``` bash
+```bash
+# Install dependencies for each service
+cd client && npm install
+cd ../socket && npm install
+cd ../server && npm install
+```
+
+Set up environment variables — copy `.env.example` to `.env` in the `server/` directory and fill in your values.
+
+```bash
+# Start each service
+npm run start   # run inside client/, server/, and socket/
+# or
+npm run dev
+```
+
+### Docker (recommended)
+
+```bash
 docker-compose up
 ```
-! Before setup by docker, make sure that you have configured .env files correctly
+
+Make sure all `.env` files are configured before running Docker.
+
+## Project Structure
+
+```
+HeyBuddy-/
+├── client/      # React frontend
+├── server/      # Express REST API
+├── socket/      # Socket.IO server
+└── docker-compose.yml
+```
