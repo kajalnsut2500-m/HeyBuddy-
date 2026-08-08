@@ -81,7 +81,7 @@ class UserController {
     }
 
     getUser(req, res) {
-        if (!req.session.user) res.status(404).send({message: 'You must be logged in'})
+        if (!req.session.user) return res.status(404).send({message: 'You must be logged in'})
         res.send(req.session.user)
     }
 

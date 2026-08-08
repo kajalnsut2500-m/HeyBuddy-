@@ -1,10 +1,11 @@
-import React, {useState, useEffect} from 'react';
-
+import React, { useState, useEffect } from 'react';
 import "./container.css"
 import API from "../../api";
 
-function AddConversationContainer({currentUser}) {
+function AddConversationContainer({ currentUser }) {
     const [list, setList] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [adding, setAdding] = useState(null)
 
     useEffect(() => {
         async function fetchData() {
@@ -13,49 +14,62 @@ function AddConversationContainer({currentUser}) {
                 setList(response.data)
             } catch (e) {
                 console.log(e)
+            } finally {
+                setLoading(false)
             }
         }
-
-        fetchData().then()
+        fetchData()
     }, [])
 
     const handleClick = async (id) => {
-        const post = {
-            senderId: currentUser.id,
-            receiverId: id
-        }
-        API.post('/createChat', post).then(() => {
+        setAdding(id)
+        try {
+            await API.post('/createChat', {
+                senderId: currentUser.id,
+                receiverId: id
+            })
             window.location.reload()
-        })
+        } catch (e) {
+            console.log(e)
+            setAdding(null)
+        }
     }
+
     return (
-        <div>
-            <div className="message-container">
-                <div className="find-box shadow p-3 bg-white rounded text-center">
-                    <p className="lead">Add new Conversation</p>
-                    <hr/>
-                    <div className="users-box text-start">
-                        <div>
-                            {list.map((c) => (
-                                <div className="my-2">
-                                    <img
-                                        className="user-image"
-                                        src={c.image}
-                                        alt=""
-                                    />
-                                    <span className="user-name">{c.nickname}</span>
-                                    <i style={{cursor: "pointer"}}
-                                       className="mx-2 fas fa-plus-circle"
-                                       onClick={() => handleClick(c.id)}
-                                    />
-                                </div>
-                            ))}
+        <div className="add-conversation-container">
+            <div className="add-conversation-header">
+                <h2 className="add-conversation-title">New Conversation</h2>
+                <p className="add-conversation-subtitle">Select a person to start chatting</p>
+            </div>
+
+            <div className="add-conversation-list">
+                {loading && (
+                    <div className="add-conversation-empty">Loading users...</div>
+                )}
+                {!loading && list.length === 0 && (
+                    <div className="add-conversation-empty">No new users to add</div>
+                )}
+                {list.map((c) => (
+                    <div className="add-user-row" key={c.id}>
+                        <div className="add-user-avatar">
+                            {c.image
+                                ? <img src={c.image} alt={c.nickname} />
+                                : <span>{c.nickname?.charAt(0).toUpperCase()}</span>
+                            }
                         </div>
+                        <div className="add-user-name">{c.nickname}</div>
+                        <button
+                            className="add-user-btn"
+                            onClick={() => handleClick(c.id)}
+                            disabled={adding === c.id}
+                        >
+                            {adding === c.id ? '...' : '+'}
+                        </button>
                     </div>
-                </div>
+                ))}
             </div>
         </div>
-    );
+    )
 }
 
 export default AddConversationContainer;

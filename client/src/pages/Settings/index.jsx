@@ -7,13 +7,13 @@ import "./settings.css"
 
 function Profile() {
     const {register, handleSubmit, setValue} = useForm();
-    const {isSuccess, isError, errorMessage} = useSelector(
-        userSelector
-    );
+    const {isSuccess, isError, errorMessage} = useSelector(userSelector);
     const [error, setError] = useState(null)
     const [success, setSuccess] = useState(null)
+    const [previewUrl, setPreviewUrl] = useState(null)
 
     const dispatch = useDispatch();
+    const {currentUser} = useSelector(userSelector)
 
     const onSubmit = (data) => {
         dispatch(updateUser(data));
@@ -23,7 +23,10 @@ function Profile() {
         dispatch(uploadImage(data));
     };
 
-    const {currentUser} = useSelector(userSelector)
+    const handleFileChange = (e) => {
+        const file = e.target.files[0]
+        if (file) setPreviewUrl(URL.createObjectURL(file))
+    }
 
     useEffect(() => {
         setValue("id", currentUser.id)
@@ -31,79 +34,105 @@ function Profile() {
         setValue("nickname", currentUser.nickname)
 
         if (isError) {
-            let error
+            let msg
             switch (errorMessage) {
-                case 'SequelizeUniqueConstraintError':
-                    error = 'This nickname is already taken!';
-                    break
+                case 'SequelizeUniqueConstraintError': msg = 'This nickname is already taken!'; break
+                default: msg = errorMessage
             }
             setSuccess(null)
-            setError(error)
+            setError(msg)
             dispatch(clearState())
         }
 
         if (isSuccess) {
             setError(null)
-            setSuccess('Successfully updated!')
+            setSuccess('Profile updated successfully!')
             dispatch(clearState())
         }
+    }, [currentUser, isError, isSuccess])
 
-    }, [currentUser])
-
+    const avatarSrc = previewUrl || currentUser.image
 
     return (
-        <div className="container">
-            <div className="col-lg-6">
-                <fieldset className="p-3">
-                    <div className="shadow p-3 mb-5 bg-white rounded text-center">
-                        <div className="lead" style={{fontSize: "24px"}}>Profile Settings</div>
+        <div className="sp-page">
+            {/* Header banner */}
+            <div className="sp-banner">
+                <div className="sp-banner-inner">
+                    <div className="sp-avatar-wrap">
+                        <img className="sp-avatar" src={avatarSrc} alt={currentUser.nickname}/>
+                        <label className="sp-avatar-edit" title="Change photo">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="white">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 1.42 9.06-9.06.59.59-9.06 9.06H5.92v-.59zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                            </svg>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                style={{display: 'none'}}
+                                onChange={handleFileChange}
+                                {...register("file")}
+                            />
+                        </label>
                     </div>
-                    <div className="shadow p-3 mb-3 bg-white rounded text-center">
-                        <img className="rounded-circle border"
-                             src={currentUser.image} style={{height: "125px", width: "125px"}}/>
-                        <form method="POST" encType="multipart/form-data" onSubmit={handleSubmit(uploadImg)}>
-                            <input type="file"
-                                   name="file"
-                                   accept="image/*"
-                                   {...register("file")}
-                            /> <br/>
-                            <button style={{width: "40%"}} type="submit"
-                                    className="btn btn-outline-dark col-12 my-2">Upload
-                                Image
-                            </button>
-                        </form>
-                        <p className="text-danger">{error}</p>
-                        <p className="text-success">{success}</p>
-                        <div className="settingsForm my-4">
-                            <form method="post" onSubmit={handleSubmit(onSubmit)}>
-                                <label>User ID</label>
-                                <input className="form-control"
-                                       type="text"
-                                       name="id"
-                                       placeholder="165"
-                                       {...register("id")}
-                                       disabled/>
-                                <label>Email</label>
-                                <input className="form-control"
-                                       type="email"
-                                       name="email"
-                                       placeholder="example@gmail.com"
-                                       {...register("email")}
-                                       disabled/>
-                                <label>Nickname</label>
-                                <input className="form-control"
-                                       type="text"
-                                       name="nickname"
-                                       placeholder="Steve"
-                                       {...register("nickname")}
-                                       required/>
-                                <br/>
-                                <button className="btn btn-outline-dark col-12" type="submit">Update</button>
-                            </form>
-                        </div>
+                    <div className="sp-banner-info">
+                        <h2 className="sp-display-name">{currentUser.nickname}</h2>
+                        <p className="sp-display-email">{currentUser.email}</p>
                     </div>
+                </div>
 
-                </fieldset>
+                <form onSubmit={handleSubmit(uploadImg)} encType="multipart/form-data">
+                    <button className="sp-upload-btn" type="submit">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                            <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+                        </svg>
+                        Upload photo
+                    </button>
+                </form>
+            </div>
+
+            {/* Form card */}
+            <div className="sp-body">
+                {error   && <div className="sp-alert sp-alert--error">{error}</div>}
+                {success && <div className="sp-alert sp-alert--success">{success}</div>}
+
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <div className="sp-card">
+                        <h3 className="sp-card-title">Account details</h3>
+
+                        <div className="sp-field">
+                            <label className="sp-label">User ID</label>
+                            <input
+                                className="sp-input sp-input--disabled"
+                                type="text"
+                                {...register("id")}
+                                disabled
+                            />
+                        </div>
+
+                        <div className="sp-field">
+                            <label className="sp-label">Email address</label>
+                            <input
+                                className="sp-input sp-input--disabled"
+                                type="email"
+                                {...register("email")}
+                                disabled
+                            />
+                        </div>
+
+                        <div className="sp-field">
+                            <label className="sp-label">Nickname <span className="sp-required">*</span></label>
+                            <input
+                                className="sp-input"
+                                type="text"
+                                placeholder="Your nickname"
+                                {...register("nickname")}
+                                required
+                            />
+                            <p className="sp-hint">This is how others will see you in HeyBuddy!</p>
+                        </div>
+
+                        <button className="sp-save-btn" type="submit">Save changes</button>
+                    </div>
+                </form>
             </div>
         </div>
     );

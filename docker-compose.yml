@@ -17,6 +17,13 @@ services:
     volumes:
       - ./postgres-db:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --requirepass localpassword
+    networks:
+      - shared-network
+
   server:
     container_name: chatter_server
     restart: unless-stopped
@@ -26,11 +33,12 @@ services:
       target: production
       dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "4000:5000"
     networks:
       - shared-network
     depends_on:
       - postgres
+      - redis
 
   client:
     container_name: chatter_client

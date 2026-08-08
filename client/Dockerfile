@@ -1,8 +1,6 @@
 FROM node:16.14.2 AS Production
 
-ENV NODE_ENV=production
-
-WORKDIR usr/src/client
+WORKDIR /usr/src/client
 
 COPY package.json .
 COPY package-lock.json .
@@ -11,6 +9,20 @@ RUN npm install
 
 COPY . .
 
+ARG REACT_APP_API_URL
+ARG REACT_APP_SOCKET_URL
+ARG REACT_APP_NAME
+ARG REACT_APP_DEMO_EMAIL
+ARG REACT_APP_DEMO_PASSWORD
+
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV REACT_APP_SOCKET_URL=$REACT_APP_SOCKET_URL
+ENV REACT_APP_NAME=$REACT_APP_NAME
+ENV REACT_APP_DEMO_EMAIL=$REACT_APP_DEMO_EMAIL
+ENV REACT_APP_DEMO_PASSWORD=$REACT_APP_DEMO_PASSWORD
+
 RUN npm run build
 
-CMD ["npm", "run", "start"]
+RUN npm install -g serve
+
+CMD ["sh", "-c", "serve -s build -l ${PORT:-3000}"]

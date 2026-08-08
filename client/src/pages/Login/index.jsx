@@ -13,9 +13,8 @@ function Login() {
     const {register, handleSubmit} = useForm();
     const [error, setError] = useState(null)
     const navigate = useNavigate();
-    const {isSuccess, isError, errorMessage} = useSelector(
-        userSelector
-    );
+    const {isSuccess, isError, errorMessage} = useSelector(userSelector);
+
     const onSubmit = (data) => {
         dispatch(loginUser(data));
     };
@@ -25,61 +24,61 @@ function Login() {
             setError(errorMessage)
             dispatch(clearState())
         }
-
         if (isSuccess) {
             dispatch(clearState())
-            window.location.href = "/"
+            navigate("/chats")
         }
     }, [isError, isSuccess]);
 
     return (
         <div className="box">
             <div className="left-side">
-                <span className="logo">
-                    {process.env.REACT_APP_NAME}
-                </span>
+                <span className="logo">{process.env.REACT_APP_NAME}</span>
+                <p className="left-side-tagline">Chat without the formality.</p>
+                <p className="left-side-desc">Connect with the people who matter, in real time.</p>
             </div>
             <div className="right-side">
-                <div className="back" onClick={() => navigate(-1)} style={{cursor: 'pointer'}}>
+                <div className="back" onClick={() => navigate(-1)}>
                     <FontAwesomeIcon className="icon" icon={faAngleLeft}/>
                     Back
                 </div>
-                <div className="container">
-                    <div className="container-login">
-                        <h3 className="loginText">Account Login</h3>
-                        <p className="lead text">
-                            If you are already a member you can login with your email address and password.
+                <div className="container-login">
+                    <h3 className="loginText">Welcome back 👋</h3>
+                    <p className="lead text">
+                        If you are already a member you can login with your email address and password.
+                    </p>
+                    {error && <p className="error">{error}</p>}
+
+                    <form className="loginForm my-4" onSubmit={handleSubmit(onSubmit)} method="POST">
+                        <label>Email Address</label>
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="you@example.com"
+                            {...register("email")}
+                            required
+                        />
+
+                        <label>Password</label>
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="••••••••••"
+                            {...register("password")}
+                            autoComplete="on"
+                            required
+                        />
+
+                        <input type="submit" value="Log In"/>
+                    </form>
+                    <span className="text-center">
+                        <p style={{color: '#64748B', fontSize: '14px', fontFamily: 'Quicksand, sans-serif', fontWeight: 500}}>
+                            Don't have an account?{' '}
+                            <a style={{textDecoration: 'none', color: '#FF6B6B', fontWeight: 700}} href="/registration">
+                                Sign up here
+                            </a>
                         </p>
-                        <p className="error">{error}</p>
-
-                        <form className="loginForm my-4"
-                              onSubmit={handleSubmit(onSubmit)}
-                              method="POST">
-
-                            <label>Email Address</label><br/>
-                            <input type="email"
-                                   name="email"
-                                   placeholder="example@gmail.com"
-                                   {...register("email")}
-                                   required/>
-
-                            <label>Password</label><br/>
-                            <input type="password"
-                                   name="password"
-                                   placeholder="**********"
-                                   {...register("password")}
-                                   autoComplete="on"
-                                   required/>
-
-                            <input type="submit" value="Log In"/>
-                        </form>
-                        <span className="text-center">
-                            <p style={{color: 'darkslategray'}}>
-                                Don't have an account ? <a style={{textDecoration: "none"}}
-                                                           href="/registration">Sign up here</a>
-                            </p>
-                        </span>
-                    </div>
+                    </span>
                 </div>
             </div>
         </div>

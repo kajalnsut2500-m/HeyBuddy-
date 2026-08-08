@@ -13,12 +13,11 @@ require('dotenv').config()
 
 const PORT = process.env.PORT || 5000
 
-const redisOptions = {
-    host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT,
-    password: process.env.REDIS_PASSWORD,
-    logErrors: true,
-}
+app.set('trust proxy', 1)
+
+const redisOptions = process.env.REDIS_URL
+    ? { url: process.env.REDIS_URL, logErrors: true }
+    : { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT, password: process.env.REDIS_PASSWORD, logErrors: true }
 
 app.use(cors({
     credentials: true,
@@ -32,7 +31,10 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 24 * 60 * 60 * 1000 // 1d
+        maxAge: 24 * 60 * 60 * 1000,
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     }
 }));
 

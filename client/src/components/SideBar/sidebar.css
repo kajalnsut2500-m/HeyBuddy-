@@ -1,5 +1,79 @@
 .side-container {
     display: flex;
     height: 100vh;
-    overflow: auto;
+    overflow: hidden;
+    width: 100vw;
+}
+
+.sidebar {
+    width: 68px;
+    min-width: 68px;
+    background-color: #1A1A2E;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 0 14px;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.sidebar-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+    letter-spacing: -0.02em;
+}
+
+.sidebar-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555A6E;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.sidebar-icon:hover {
+    background-color: rgba(255, 107, 107, 0.12);
+    color: #FF8E8E;
+}
+
+.sidebar-icon.active {
+    background-color: rgba(255, 107, 107, 0.18);
+    color: #FF6B6B;
+}
+
+.sidebar-spacer {
+    flex: 1;
+}
+
+.sidebar-icon.logout {
+    color: #7A3F3F;
+}
+
+.sidebar-icon.logout:hover {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #EF4444;
+}
+
+.sidebar-children {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    min-width: 0;
 }

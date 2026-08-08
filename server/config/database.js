@@ -4,9 +4,13 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 module.exports = new Sequelize(process.env.DATABASE_URL, {
-    host: 'postgres',
     dialect: 'postgres',
-
+    protocol: 'postgres',
+    dialectOptions: {
+        ssl: process.env.DB_SSL === 'true'
+            ? { require: true, rejectUnauthorized: false }
+            : false
+    },
     pool: {
         max: 5,
         min: 0,

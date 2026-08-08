@@ -13,6 +13,7 @@ import "font-awesome/css/font-awesome.css";
 import {PrivateRoute} from './routes'
 
 import SideBar from "./components/SideBar";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Chats from "./pages/Chats";
@@ -24,11 +25,11 @@ export default function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route index element={<Navigate to="/chats" replace/>}/>
-                <Route path='/settings' element={<SideBar> <PrivateRoute> <Settings/> </PrivateRoute> </SideBar>}/>
-                <Route path='/chats' element={<SideBar> <PrivateRoute> <Chats/> </PrivateRoute> </SideBar>}/>
-                <Route path='/registration' element={<SignUp/>}/>
+                <Route index element={<Home/>}/>
                 <Route path='/login' element={<Login/>}/>
+                <Route path='/registration' element={<SignUp/>}/>
+                <Route path='/chats' element={<SideBar> <PrivateRoute> <Chats/> </PrivateRoute> </SideBar>}/>
+                <Route path='/settings' element={<SideBar> <PrivateRoute> <Settings/> </PrivateRoute> </SideBar>}/>
             </Routes>
         </BrowserRouter>
     );

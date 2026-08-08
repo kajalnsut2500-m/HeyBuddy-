@@ -85,7 +85,7 @@ export const getUser = createAsyncThunk(
                 return thunkAPI.rejectWithValue(data);
             }
         } catch (e) {
-            return thunkAPI.rejectWithValue(e.response.data);
+            return thunkAPI.rejectWithValue(e.response?.data || {message: 'Session expired'});
         }
     }
 );
@@ -93,7 +93,7 @@ export const getUser = createAsyncThunk(
 export const logoutUser = createAsyncThunk("auth/logout", async () => {
     try {
         await API.get('/logout')
-        window.location.href = '/login'
+        window.location.href = '/'
     }
     catch (e) {
         console.log('Error', e.response.data)

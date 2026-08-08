@@ -21,14 +21,22 @@ const Card = () => {
         </div>
     )
 
-    return (
-        <div className="text-center">
-            <img className="rounded-circle border"
-                 src={user.image} style={{height: "125px", width: "125px"}}/>
-            <hr />
-            <h3>{user.nickname}</h3>
-            <span className="lead" style={{fontSize: "19px"}}>{user.email}</span>
-        </div>
-    );
+return (
+    <div style={{display: 'flex', alignItems: 'center', gap: '12px', padding: '4px 0'}}>
+        <img
+            src={user.image}
+            alt={user.nickname}
+            style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+                flexShrink: 0,
+                backgroundColor: '#ccc'
+            }}
+        />
+        <span style={{fontWeight: '600', fontSize: '15px', color: 'white'}}>{user.nickname}</span>
+    </div>
+);
 };
 export default Card;
