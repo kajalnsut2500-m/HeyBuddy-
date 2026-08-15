@@ -23,10 +23,12 @@ function Chats() {
     const [clicked, setClicked] = useState(false)
 
     // WebRTC receiver state
-    const [receivedPages, setReceivedPages] = useState([])
-    const [totalPages, setTotalPages] = useState(0)
+    const [pdfUrl, setPdfUrl] = useState(null)
     const [transferFilename, setTransferFilename] = useState('')
+    const [transferBytesReceived, setTransferBytesReceived] = useState(0)
+    const [transferTotalBytes, setTransferTotalBytes] = useState(0)
     const peerRef = useRef(null)
+    const outgoingPeerRef = useRef(null)
 
     // Create ONE socket for everything: chat messages + WebRTC signaling
     useEffect(() => {
@@ -45,12 +47,22 @@ function Chats() {
         setClicked(true)
     }
 
+    const handleCloseViewer = () => {
+        if (pdfUrl) URL.revokeObjectURL(pdfUrl)
+        setPdfUrl(null)
+        setTransferFilename('')
+        setTransferBytesReceived(0)
+        setTransferTotalBytes(0)
+    }
+
     const changeChat = (chat) => {
         setClicked(false)
         setCurrentChat(chat)
-        setReceivedPages([])
-        setTotalPages(0)
+        if (pdfUrl) URL.revokeObjectURL(pdfUrl)
+        setPdfUrl(null)
         setTransferFilename('')
+        setTransferBytesReceived(0)
+        setTransferTotalBytes(0)
     }
 
     const fetchChats = async () => {
@@ -73,15 +85,21 @@ function Chats() {
         if (!socket) return
 
         const handleOffer = async ({ from, offer }) => {
+            console.log('[WR] RECEIVER: socket received webrtc-offer — from:', from, 'currentUser:', currentUser.id, 'offer type:', offer?.type)
             const receiver = new DocumentReceiver(
-                (filename, pages) => {
+                (filename, totalBytes) => {
                     setTransferFilename(filename)
-                    setTotalPages(pages)
+                    setTransferTotalBytes(totalBytes)
+                    setTransferBytesReceived(0)
+                    setPdfUrl(null)
                 },
-                (page) => {
-                    setReceivedPages(prev => [...prev, page])
+                (bytesReceived) => {
+                    setTransferBytesReceived(bytesReceived)
                 },
-                () => console.log('Transfer complete')
+                (url, filename) => {
+                    setPdfUrl(url)
+                    setTransferFilename(filename)
+                }
             )
 
             const peer = new PeerConnection(
@@ -95,7 +113,11 @@ function Chats() {
         }
 
         const handleAnswer = async ({ answer }) => {
-            await peerRef.current?.handleAnswer(answer)
+            console.log('[WR] SENDER: socket received webrtc-answer — answer type:', answer?.type, 'outgoingPeerRef.current is', outgoingPeerRef.current ? 'SET' : 'NULL')
+            if (!outgoingPeerRef.current) {
+                console.error('[WR] SENDER: outgoingPeerRef is null — answer will be dropped!')
+            }
+            await outgoingPeerRef.current?.handleAnswer(answer)
         }
 
         socket.on('webrtc-offer', handleOffer)
@@ -134,15 +156,18 @@ function Chats() {
                         currentChat={currentChat}
                         currentUser={currentUser}
                         socket={socket}
+                        outgoingPeerRef={outgoingPeerRef}
                     />
                     : <AddConversationContainer currentUser={currentUser}/>}
             </div>
-            {totalPages > 0 && (
+            {(transferFilename || pdfUrl) && (
                 <div className="transfer-panel">
                     <DocumentViewer
-                        pages={receivedPages}
-                        totalPages={totalPages}
+                        pdfUrl={pdfUrl}
                         filename={transferFilename}
+                        bytesReceived={transferBytesReceived}
+                        totalBytes={transferTotalBytes}
+                        onClose={handleCloseViewer}
                     />
                 </div>
             )}
