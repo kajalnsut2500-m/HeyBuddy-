@@ -41,15 +41,35 @@ app.use(session({
 app.use(express.json())
 
 const start = async () => {
-    await db.authenticate()
-        .then(() => console.log('Database connected...'))
-        .catch(err => console.log('Error: ' + err))
+    try {
+        await db.authenticate()
+        console.log('Database connected...')
 
-    // Add presence columns if they don't exist (safe no-op if already present)
-    await db.query(`ALTER TABLE people ADD COLUMN IF NOT EXISTS "isOnline" BOOLEAN DEFAULT false`)
-    await db.query(`ALTER TABLE people ADD COLUMN IF NOT EXISTS "lastSeen" TIMESTAMP WITH TIME ZONE`)
+        // Create database tables if they don't exist
+        await db.sync()
+        console.log('Database tables synced...')
 
-    await app.listen(PORT, () => console.log(process.env.SERVER_URL))
+        // Add presence columns if they don't exist
+        await db.query(`
+            ALTER TABLE people
+            ADD COLUMN IF NOT EXISTS "isOnline" BOOLEAN DEFAULT false
+        `)
+
+        await db.query(`
+            ALTER TABLE people
+            ADD COLUMN IF NOT EXISTS "lastSeen" TIMESTAMP WITH TIME ZONE
+        `)
+
+        console.log('Presence columns ready...')
+
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`)
+        })
+
+    } catch (err) {
+        console.error('Server startup error:', err)
+        process.exit(1)
+    }
 }
 
 app.use('/api', userRoutes)
