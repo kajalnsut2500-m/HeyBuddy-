@@ -7,6 +7,7 @@ import { userSelector } from "../../store/slices/userSlice";
 import { PeerConnection } from "../../webrtc/PeerConnection";
 import { DocumentReceiver } from "../../webrtc/DocumentReceiver";
 import DocumentViewer from "../../components/DocumentViewer";
+import { savePdf, getPdf } from "../../utils/pdfStorage";
 
 import ChatContainer from "../ChatContainer";
 import AddConversationContainer from "../AddConversationContainer";
@@ -32,6 +33,44 @@ function Chats() {
     const [viewerVisible, setViewerVisible] = useState(false)
     const peerRef = useRef(null)
     const outgoingPeerRef = useRef(null)
+    // Tracks the active object URL so we can revoke it before creating a new one
+    const currentPdfUrlRef = useRef(null)
+
+    // Revoke the active object URL and clear viewer state (keeps IndexedDB entry)
+    const closePdfViewer = () => {
+        if (currentPdfUrlRef.current) {
+            URL.revokeObjectURL(currentPdfUrlRef.current)
+            currentPdfUrlRef.current = null
+        }
+        setPdfUrl(null)
+        setViewerVisible(false)
+    }
+
+    // Open a stored PDF by its pdfId — retrieves blob from IndexedDB, creates fresh URL
+    const openPdfById = async (pdfId, filename) => {
+        const blob = await getPdf(pdfId)
+        if (!blob) {
+            console.warn('[PDF] blob not found in storage for pdfId:', pdfId)
+            return
+        }
+        if (currentPdfUrlRef.current) {
+            URL.revokeObjectURL(currentPdfUrlRef.current)
+        }
+        const url = URL.createObjectURL(blob)
+        currentPdfUrlRef.current = url
+        setPdfUrl(url)
+        setTransferFilename(filename)
+        setTransferBytesReceived(0)
+        setTransferTotalBytes(0)
+        setViewerVisible(true)
+    }
+
+    // Revoke object URL on unmount to avoid leak
+    useEffect(() => {
+        return () => {
+            if (currentPdfUrlRef.current) URL.revokeObjectURL(currentPdfUrlRef.current)
+        }
+    }, [])
 
     // Create ONE socket for everything: chat messages + WebRTC signaling
     useEffect(() => {
@@ -74,8 +113,13 @@ function Chats() {
     const changeChat = (chat) => {
         setClicked(false)
         setCurrentChat(chat)
-        if (pdfUrl) URL.revokeObjectURL(pdfUrl)
+        // Revoke the object URL (frees memory) but keep the blob in IndexedDB
+        if (currentPdfUrlRef.current) {
+            URL.revokeObjectURL(currentPdfUrlRef.current)
+            currentPdfUrlRef.current = null
+        }
         setPdfUrl(null)
+        setViewerVisible(false)
         setTransferFilename('')
         setTransferBytesReceived(0)
         setTransferTotalBytes(0)
@@ -104,16 +148,25 @@ function Chats() {
             console.log('[WR] RECEIVER: socket received webrtc-offer — from:', from, 'currentUser:', currentUser.id, 'offer type:', offer?.type)
             const receiver = new DocumentReceiver(
                 (filename, totalBytes) => {
+                    // New transfer starting — revoke any previous object URL
+                    if (currentPdfUrlRef.current) {
+                        URL.revokeObjectURL(currentPdfUrlRef.current)
+                        currentPdfUrlRef.current = null
+                    }
+                    setPdfUrl(null)
                     setTransferFilename(filename)
                     setTransferTotalBytes(totalBytes)
                     setTransferBytesReceived(0)
-                    setPdfUrl(null)
                     setViewerVisible(true)
                 },
                 (bytesReceived) => {
                     setTransferBytesReceived(bytesReceived)
                 },
-                (url, filename) => {
+                async (blob, filename, pdfId) => {
+                    // Persist blob in IndexedDB so it survives chat switches and page reloads
+                    if (pdfId) await savePdf(pdfId, blob)
+                    const url = URL.createObjectURL(blob)
+                    currentPdfUrlRef.current = url
                     setPdfUrl(url)
                     setTransferFilename(filename)
                 }
@@ -180,6 +233,7 @@ function Chats() {
                         socket={socket}
                         outgoingPeerRef={outgoingPeerRef}
                         presenceMap={presenceMap}
+                        openPdfById={openPdfById}
                     />
                     : <AddConversationContainer currentUser={currentUser}/>}
             </div>
@@ -190,7 +244,7 @@ function Chats() {
                         filename={transferFilename}
                         bytesReceived={transferBytesReceived}
                         totalBytes={transferTotalBytes}
-                        onClose={() => setViewerVisible(false)}
+                        onClose={closePdfViewer}
                     />
                 </div>
             )}

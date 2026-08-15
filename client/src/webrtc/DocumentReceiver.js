@@ -7,6 +7,7 @@ export class DocumentReceiver {
         this.totalBytes = 0
         this.receivedBytes = 0
         this.filename = ''
+        this.pdfId = null
     }
 
     handleMessage(data) {
@@ -27,13 +28,14 @@ export class DocumentReceiver {
             this.receivedBytes = 0
             this.totalBytes = signal.totalBytes
             this.filename = signal.filename
+            this.pdfId = signal.pdfId ?? null
             this.onTransferStart(signal.filename, signal.totalBytes)
         }
 
         if (signal.type === 'TRANSFER_DONE') {
             const blob = new Blob(this.chunks, { type: 'application/pdf' })
-            const url = URL.createObjectURL(blob)
-            this.onTransferComplete(url, this.filename)
+            // Pass raw blob + pdfId — caller stores blob in IndexedDB
+            this.onTransferComplete(blob, this.filename, this.pdfId)
         }
     }
 

@@ -20,7 +20,7 @@ function formatLastSeen(lastSeenUtc) {
     return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`
 }
 
-function ChatContainer({currentChat, currentUser, socket, outgoingPeerRef, presenceMap}) {
+function ChatContainer({currentChat, currentUser, socket, outgoingPeerRef, presenceMap, openPdfById}) {
     const [messages, setMessages] = useState([])
     const [newMessage, setNewMessage] = useState("")
     const [image, setImage] = useState("")
@@ -136,7 +136,8 @@ function ChatContainer({currentChat, currentUser, socket, outgoingPeerRef, prese
         setSendingFile(true)
 
         // Show a pending "sending file" bubble immediately on sender's side
-        const fileText = `📄 ${file.name}`
+        const pdfId = crypto.randomUUID()
+        const fileText = `📄 ${file.name}|pdfId:${pdfId}`
         const tempId = 'temp-file-' + Date.now()
         const tempMsg = { id: tempId, senderId: currentUser.id, text: fileText, pending: true }
         setMessages(prev => [...prev, tempMsg])
@@ -156,7 +157,7 @@ function ChatContainer({currentChat, currentUser, socket, outgoingPeerRef, prese
             console.log('[WR] SENDER: DataChannel open! Starting file transfer')
 
             const splitter = new DocumentSplitter()
-            await splitter.splitAndStream(file, peer, () => {})
+            await splitter.splitAndStream(file, peer, () => {}, pdfId)
             console.log('[WR] SENDER: splitAndStream complete')
 
             // File transferred — now create the persistent chat message for both sides
@@ -265,6 +266,7 @@ function ChatContainer({currentChat, currentUser, socket, outgoingPeerRef, prese
                             image={image}
                             showReadReceipt={index === lastOwnIdx && !m.pending}
                             readByOther={readByOther}
+                            onPdfClick={openPdfById}
                         />
                     </div>
                 ))}

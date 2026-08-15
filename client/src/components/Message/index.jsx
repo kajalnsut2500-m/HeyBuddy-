@@ -7,17 +7,25 @@ function isFileMessage(text) {
 }
 
 function getFilename(text) {
-    // Strip the leading emoji + space
-    return text.replace(/^[📄❌]\s/, '')
+    return text.replace(/^[📄❌]\s/u, '').split('|pdfId:')[0]
 }
 
-export default function Message({ message, own, image, ownImage, showReadReceipt, readByOther }) {
+function getPdfId(text) {
+    if (!text) return null
+    const parts = text.split('|pdfId:')
+    return parts.length > 1 ? parts[1] : null
+}
+
+export default function Message({ message, own, image, ownImage, showReadReceipt, readByOther, onPdfClick }) {
     const timeAgo = message.createdAt
         ? moment(message.createdAt).fromNow()
         : "sending..."
 
     const isFile = isFileMessage(message.text)
     const isFailed = message.text?.startsWith('❌')
+    // Received (non-own) PDF messages with a pdfId are reopenable
+    const pdfId = isFile && !own && !isFailed ? getPdfId(message.text) : null
+    const filename = isFile ? getFilename(message.text) : null
 
     return (
         <div className={`message ${own ? "own" : ""} ${message.pending ? "pending" : ""}`}>
@@ -28,7 +36,12 @@ export default function Message({ message, own, image, ownImage, showReadReceipt
                     alt=""
                 />
                 {isFile ? (
-                    <div className={`messageFile ${own ? "messageFile--own" : ""} ${isFailed ? "messageFile--failed" : ""}`}>
+                    <div
+                        className={`messageFile ${own ? "messageFile--own" : ""} ${isFailed ? "messageFile--failed" : ""}`}
+                        style={pdfId ? {cursor: 'pointer'} : undefined}
+                        title={pdfId ? 'Click to open PDF' : undefined}
+                        onClick={pdfId && onPdfClick ? () => onPdfClick(pdfId, filename) : undefined}
+                    >
                         <div className="messageFile-icon">
                             {isFailed ? (
                                 <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
@@ -41,9 +54,9 @@ export default function Message({ message, own, image, ownImage, showReadReceipt
                             )}
                         </div>
                         <div className="messageFile-info">
-                            <span className="messageFile-name">{getFilename(message.text)}</span>
+                            <span className="messageFile-name">{filename}</span>
                             <span className="messageFile-label">
-                                {isFailed ? 'Transfer failed' : message.pending ? 'Transferring…' : 'Sent via WebRTC'}
+                                {isFailed ? 'Transfer failed' : message.pending ? 'Transferring…' : pdfId ? 'Tap to open · Sent via WebRTC' : 'Sent via WebRTC'}
                             </span>
                         </div>
                     </div>
