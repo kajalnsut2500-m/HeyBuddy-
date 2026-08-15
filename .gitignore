@@ -7,4 +7,5 @@
 /socket/.env
 postgres-db/
 .DS_Store
+client/build/socket/.env
 client/build/
