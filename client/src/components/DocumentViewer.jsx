@@ -12,12 +12,12 @@ const DocumentViewer = ({ pdfUrl, filename, bytesReceived, totalBytes, onClose }
     }
 
     return (
-        <div style={{ background: '#1e1e1e', padding: '16px', borderRadius: '8px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ background: '#1e1e1e', padding: '16px', borderRadius: '8px', display: 'flex', flexDirection: 'column', height: '100%',position:'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <div style={{ color: '#fff', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     📄 {filename}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: '12px',position: 'absolute',right:'8px',top:'8px' }}>
                     {isComplete && (
                         <button
                             onClick={handleDownload}
@@ -38,17 +38,17 @@ const DocumentViewer = ({ pdfUrl, filename, bytesReceived, totalBytes, onClose }
                     {onClose && (
                         <button
                             onClick={onClose}
-                            title="Close viewer"
                             style={{
                                 background: 'transparent',
                                 color: '#aaa',
                                 border: '1px solid #555',
                                 borderRadius: '6px',
                                 padding: '6px 10px',
-                                fontSize: '16px',
-                                lineHeight: 1,
-                                cursor: 'pointer'
+                                fontSize: '14px',
+                                cursor: 'pointer',
+                                lineHeight: 1
                             }}
+                            title="Close"
                         >
                             ✕
                         </button>

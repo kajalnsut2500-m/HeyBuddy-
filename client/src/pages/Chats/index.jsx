@@ -21,12 +21,15 @@ function Chats() {
     const [list, setList] = useState([])
     const [socket, setSocket] = useState(null)
     const [clicked, setClicked] = useState(false)
+    // {[userId]: {isOnline: bool, lastSeen: string|null}}
+    const [presenceMap, setPresenceMap] = useState({})
 
     // WebRTC receiver state
     const [pdfUrl, setPdfUrl] = useState(null)
     const [transferFilename, setTransferFilename] = useState('')
     const [transferBytesReceived, setTransferBytesReceived] = useState(0)
     const [transferTotalBytes, setTransferTotalBytes] = useState(0)
+    const [viewerVisible, setViewerVisible] = useState(false)
     const peerRef = useRef(null)
     const outgoingPeerRef = useRef(null)
 
@@ -43,16 +46,29 @@ function Chats() {
         socket.emit("addUser", currentUser.id)
     }, [socket, currentUser.id])
 
-    const handleSubmit = () => {
-        setClicked(true)
+    // Real-time presence updates from the socket server
+    useEffect(() => {
+        if (!socket) return
+        const handlePresence = ({userId, isOnline, lastSeen}) => {
+            setPresenceMap(prev => ({
+                ...prev,
+                [String(userId)]: {isOnline, lastSeen}
+            }))
+        }
+        socket.on('presenceUpdate', handlePresence)
+        return () => socket.off('presenceUpdate', handlePresence)
+    }, [socket])
+
+    // Seed presenceMap from the API when Conversation fetches user data
+    const updatePresence = (userId, data) => {
+        setPresenceMap(prev => ({
+            ...prev,
+            [String(userId)]: {...prev[String(userId)], ...data}
+        }))
     }
 
-    const handleCloseViewer = () => {
-        if (pdfUrl) URL.revokeObjectURL(pdfUrl)
-        setPdfUrl(null)
-        setTransferFilename('')
-        setTransferBytesReceived(0)
-        setTransferTotalBytes(0)
+    const handleSubmit = () => {
+        setClicked(true)
     }
 
     const changeChat = (chat) => {
@@ -92,6 +108,7 @@ function Chats() {
                     setTransferTotalBytes(totalBytes)
                     setTransferBytesReceived(0)
                     setPdfUrl(null)
+                    setViewerVisible(true)
                 },
                 (bytesReceived) => {
                     setTransferBytesReceived(bytesReceived)
@@ -145,7 +162,12 @@ function Chats() {
                 <div className="conversations-scroll">
                     {list.map((c) => (
                         <div onClick={() => changeChat(c)} key={c.id}>
-                            <Conversation conversation={c} currentUser={currentUser}/>
+                            <Conversation
+                                conversation={c}
+                                currentUser={currentUser}
+                                presenceMap={presenceMap}
+                                onPresenceLoad={updatePresence}
+                            />
                         </div>
                     ))}
                 </div>
@@ -157,17 +179,18 @@ function Chats() {
                         currentUser={currentUser}
                         socket={socket}
                         outgoingPeerRef={outgoingPeerRef}
+                        presenceMap={presenceMap}
                     />
                     : <AddConversationContainer currentUser={currentUser}/>}
             </div>
-            {(transferFilename || pdfUrl) && (
+            {(transferFilename || pdfUrl) && viewerVisible && (
                 <div className="transfer-panel">
                     <DocumentViewer
                         pdfUrl={pdfUrl}
                         filename={transferFilename}
                         bytesReceived={transferBytesReceived}
                         totalBytes={transferTotalBytes}
-                        onClose={handleCloseViewer}
+                        onClose={() => setViewerVisible(false)}
                     />
                 </div>
             )}

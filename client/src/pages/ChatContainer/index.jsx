@@ -7,7 +7,20 @@ import {DocumentSplitter} from "../../webrtc/DocumentSplitter";
 
 const EMOJIS = ['😀','😂','😍','🥰','😎','😢','😡','👍','👎','❤️','🔥','🎉','🙏','💯','😭','🤔','😅','🥳','😴','🤣','✅','🫡']
 
-function ChatContainer({currentChat, currentUser, socket}) {
+function formatLastSeen(lastSeenUtc) {
+    if (!lastSeenUtc) return ''
+    const diffMs = Date.now() - new Date(lastSeenUtc).getTime()
+    const diffSecs = Math.floor(diffMs / 1000)
+    if (diffSecs < 60) return 'just now'
+    const diffMins = Math.floor(diffSecs / 60)
+    if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`
+    const diffHours = Math.floor(diffMins / 60)
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`
+    const diffDays = Math.floor(diffHours / 24)
+    return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`
+}
+
+function ChatContainer({currentChat, currentUser, socket, outgoingPeerRef, presenceMap}) {
     const [messages, setMessages] = useState([])
     const [newMessage, setNewMessage] = useState("")
     const [image, setImage] = useState("")
@@ -21,8 +34,9 @@ function ChatContainer({currentChat, currentUser, socket}) {
     const scrollRef = useRef()
     const fileInputRef = useRef()
     const typingTimeoutRef = useRef(null)
-    const outgoingPeerRef = useRef(null)
+
     const recId = currentChat?.users.find(m => m != currentUser.id)
+    const recPresence = recId ? presenceMap?.[String(recId)] : null
 
     // Incoming chat messages
     useEffect(() => {
@@ -130,15 +144,20 @@ function ChatContainer({currentChat, currentUser, socket}) {
 
         try {
             // Start WebRTC transfer
+            console.log('[WR] SENDER: creating PeerConnection, recId=', recId)
             const peer = new PeerConnection(socket, currentUser.id, recId, () => {})
             outgoingPeerRef.current = peer
+            console.log('[WR] SENDER: outgoingPeerRef set, calling createOffer')
 
             const channelOpen = new Promise(resolve => { peer.onOpen = resolve })
             await peer.createOffer()
+            console.log('[WR] SENDER: createOffer done, waiting for DataChannel to open...')
             await channelOpen
+            console.log('[WR] SENDER: DataChannel open! Starting file transfer')
 
             const splitter = new DocumentSplitter()
             await splitter.splitAndStream(file, peer, () => {})
+            console.log('[WR] SENDER: splitAndStream complete')
 
             // File transferred — now create the persistent chat message for both sides
             socket.emit("sendMessage", { senderId: currentUser.id, receiverId: recId, text: fileText })
@@ -224,7 +243,13 @@ function ChatContainer({currentChat, currentUser, socket}) {
                     <div className="chat-header-status">
                         {isTyping
                             ? <span className="typing-status">typing<span className="typing-dots"><span>.</span><span>.</span><span>.</span></span></span>
-                            : '● Online'
+                            : recPresence?.isOnline
+                                ? '● Online'
+                                : recPresence?.lastSeen
+                                    ? `Last seen ${formatLastSeen(recPresence.lastSeen)}`
+                                    : recPresence
+                                        ? 'Offline'
+                                        : ''
                         }
                     </div>
                 </div>

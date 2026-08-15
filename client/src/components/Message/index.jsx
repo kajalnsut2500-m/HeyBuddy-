@@ -13,7 +13,7 @@ function getFilename(text) {
 
 export default function Message({ message, own, image, ownImage, showReadReceipt, readByOther }) {
     const timeAgo = message.createdAt
-        ? moment(moment(message.createdAt).tz('UTC')).fromNow()
+        ? moment(message.createdAt).fromNow()
         : "sending..."
 
     const isFile = isFileMessage(message.text)

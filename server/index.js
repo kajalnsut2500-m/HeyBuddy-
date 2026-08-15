@@ -32,9 +32,9 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         maxAge: 24 * 60 * 60 * 1000,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.COOKIE_SECURE === 'true',
         httpOnly: true,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        sameSite: process.env.COOKIE_SECURE === 'true' ? 'none' : 'lax'
     }
 }));
 
@@ -44,6 +44,10 @@ const start = async () => {
     await db.authenticate()
         .then(() => console.log('Database connected...'))
         .catch(err => console.log('Error: ' + err))
+
+    // Add presence columns if they don't exist (safe no-op if already present)
+    await db.query(`ALTER TABLE people ADD COLUMN IF NOT EXISTS "isOnline" BOOLEAN DEFAULT false`)
+    await db.query(`ALTER TABLE people ADD COLUMN IF NOT EXISTS "lastSeen" TIMESTAMP WITH TIME ZONE`)
 
     await app.listen(PORT, () => console.log(process.env.SERVER_URL))
 }
