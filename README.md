@@ -1,8 +1,8 @@
-# HeyBuddy! 💬
+# HeyBuddy!!
 
 A real-time chat application with **peer-to-peer PDF/document sharing over WebRTC** — built with Node.js, Express, React, and Socket.IO.
 
-**🔗 Live demo:** https://truthful-vision-production-8931.up.railway.app/
+**Live demo currently offline — see the demo GIF below.** 
 
 > This project was originally forked from [Bioneisme/nodejs-socket-react-chatapp](https://github.com/Bioneisme/nodejs-socket-react-chatapp) (MIT licensed) and has been substantially redesigned and extended — see [What I Changed](#what-i-changed) below.
 
@@ -118,11 +118,16 @@ Make sure all `.env` files are configured before running Docker.
 
 ## Project Structure
 
+```
 HeyBuddy-/
-├── client/ # React frontend
-├── server/ # Express REST API
-├── socket/ # Socket.IO server
-└── docker-compose.yml
+├── client/              # React frontend (Redux Toolkit, WebRTC file transfer)
+├── server/              # Express REST API (auth, users, messages)
+├── socket/              # Socket.IO server (messaging, presence, WebRTC signaling)
+├── postgres-docker/     # Postgres init SQL for Docker
+├── pictures/            # README screenshots and demo GIF
+├── docker-compose.yml   # Runs all services together
+└── LICENSE
+```
 
 ## License
 
